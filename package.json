@@ -2,16 +2,16 @@
   "name": "my-staking-app",
   "version": "1.0.0",
   "description": "A decentralized staking app deployed on GitHub Pages",
-  "homepage": "https://<your-username>.github.io/<your-repo-name>",
+  "homepage": "https://jordanwauran.github.io/staking-pool",
   "scripts": {
-    "deploy": "gh-pages -d docs",
+    "deploy": "gh-pages -d src",
     "hardhat": "hardhat",
     "hardhat:compile": "hardhat compile"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition-ethers": "^0.15.5",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "gh-pages": "^6.1.1",
+    "gh-pages": "^6.3.0",
     "hardhat": "^2.22.10"
   },
   "dependencies": {
