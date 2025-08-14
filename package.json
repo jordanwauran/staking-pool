@@ -1,0 +1,22 @@
+{
+  "name": "my-staking-app",
+  "version": "1.0.0",
+  "description": "A decentralized staking app deployed on GitHub Pages",
+  "homepage": "https://<your-username>.github.io/<your-repo-name>",
+  "scripts": {
+    "deploy": "gh-pages -d docs",
+    "hardhat": "hardhat",
+    "hardhat:compile": "hardhat compile"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition-ethers": "^0.15.5",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "gh-pages": "^6.1.1",
+    "hardhat": "^2.22.10"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.15.0"
+  }
+}

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<!-- Pool Stake App Developed by Jordan Wauran -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="./assets/lizard.png">
+  <title>Pool Stake</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>  
+</head>
+<body class="bg-[#161617] min-h-screen flex items-center justify-center">
+  <div id="root"></div>
+  <!-- React and ReactDOM via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <!-- Ethers.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+  <!-- Babel Standalone for JSX -->
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.25.6/babel.min.js"></script>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const { ethers } = window;
+
+    const stakingPoolAbi = [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_stakingToken",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_rewardToken",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "reward",
+          "type": "uint256"
+        }
+      ],
+      "name": "RewardPaid",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newRate",
+          "type": "uint256"
+        }
+      ],
+      "name": "RewardRateUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Staked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "user",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Unstaked",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "balanceOf",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "claimReward",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "earned",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastUpdateTime",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardPerToken",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardPerTokenStored",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardRate",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rewards",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_rewardRate",
+          "type": "uint256"
+        }
+      ],
+      "name": "setRewardRate",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "stake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "stakedBalance",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stakingToken",
+      "outputs": [
+        {
+          "internalType": "contract IERC20",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "totalStaked",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstake",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "userRewardPerTokenPaid",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+
+    // ERC-20 ABI (minimal for approve)
+    const erc20Abi = [
+      "function approve(address spender, uint256 amount) public returns (bool)",
+      "function allowance(address owner, address spender) public view returns (uint256)",
+      "function balanceOf(address account) view returns (uint256)"
+    ];
+
+    const STAKING_CONTRACT_ADDRESS = "0x77d45EAbfA1A0458374722B2A1414C108455e2cB";
+    const BASE_SEPOLIA_CHAIN_ID = 84532; // Base Sepolia chain ID
+
+    function App() {
+      const [provider, setProvider] = useState(null);
+      const [signer, setSigner] = useState(null);
+      const [account, setAccount] = useState(null);
+      const [stakingContract, setStakingContract] = useState(null);
+      const [tokenContract, setTokenContract] = useState(null);
+      const [stakedBalance, setStakedBalance] = useState("0");
+      const [rewards, setRewards] = useState("0");
+      const [stakeAmount, setStakeAmount] = useState("");
+      const [unstakeAmount, setUnstakeAmount] = useState("");
+      const [tokenAddress, setTokenAddress] = useState(null);
+      const [tokenBalance, setTokenBalance] = useState("0");
+      const [error, setError] = useState("");
+      const [isLoading, setIsLoading] = useState(false);
+      const [showAlert, setShowAlert] = useState(false);
+      const [alertMessage, setAlertMessage] = useState("");
+      const [isApproved, setIsApproved] = useState(false);
+
+      // Initialize provider and contracts
+      useEffect(() => {
+        console.log('ethers:', ethers);
+        if (window.ethereum) {
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          setProvider(provider);
+        } else {
+            setError("Please install MetaMask");
+        }
+      }, []);
+
+      // Connect wallet and initialize contracts
+      const connectWallet = async () => {
+        try {
+          if (!window.ethereum) {
+            setError("Please install MetaMask");
+            return;
+          }
+
+          // Request account access
+          const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+          await window.ethereum.request({ method: "eth_requestAccounts" });
+
+          // Switch to Base Sepolia
+          try {
+            await window.ethereum.request({
+              method: "wallet_switchEthereumChain",
+              params: [{ chainId: `0x${BASE_SEPOLIA_CHAIN_ID.toString(16)}` }],
+            });
+          } catch (switchError) {
+            if (switchError.code === 4902) {
+              setError("Please add Base Sepolia network in MetaMask");
+              return;
+            }
+          }
+
+          const provider = new ethers.BrowserProvider(window.ethereum);
+          const signer = await provider.getSigner();
+          const address = await signer.getAddress();
+
+          // Initialize contracts
+          const staking = new ethers.Contract(STAKING_CONTRACT_ADDRESS, stakingPoolAbi, signer);
+          const stakingTokenAddress = await staking.stakingToken();
+          const token = new ethers.Contract(stakingTokenAddress, erc20Abi, signer);
+
+          setProvider(provider);
+          setSigner(signer);
+          setAccount(address);
+          setStakingContract(staking);
+          setTokenContract(token);
+          setTokenAddress(stakingTokenAddress);
+
+          // Fetch initial data
+          await updateBalances(staking, token, address);
+        } catch (err) {
+          setError("Failed to connect wallet" + err.message);
+        }
+      };
+
+      // Update staked balance and rewards
+      const updateBalances = async (staking, token, address) => {
+        try {
+          const balance = await staking.balanceOf(address);
+          const earned = await staking.earned(address);
+          const tokenBal = await token.balanceOf(address);
+          setStakedBalance(ethers.formatEther(balance));
+          setRewards(ethers.formatEther(earned));
+          setTokenBalance(ethers.formatEther(tokenBal));
+
+          const stakingTokenAddress = await staking.stakingToken();
+        } catch (err) {
+          setError("Error fetching balances");
+        }
+      };
+
+      // Approve token spending
+      const approveTokens = async () => {
+        try {
+          setIsLoading(true);
+          const amount = ethers.parseEther(stakeAmount || "0");
+          const tx = await tokenContract.approve(STAKING_CONTRACT_ADDRESS, amount);
+          await tx.wait();
+          setAlertMessage("Approval successful!");
+          setShowAlert(true);
+        } catch (err) {
+          setError("Approval failed");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Stake tokens
+      const stakeTokens = async () => {
+        try {
+          setIsLoading(true);
+          const amount = ethers.parseEther(stakeAmount);
+
+          const allowance = await tokenContract.allowance(account, STAKING_CONTRACT_ADDRESS);
+          if (allowance < amount) {
+            setError("Please approve the token amount first.");
+            return;
+          }
+
+          const tx = await stakingContract.stake(amount);
+          await tx.wait();
+          setStakeAmount("");
+          updateBalances(stakingContract, tokenContract, account);
+          setAlertMessage("Stake successful!");
+          setShowAlert(true);
+        } catch (err) {
+          setError("Stake failed");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Unstake tokens
+      const unstakeTokens = async () => {
+        try {
+          const amount = ethers.parseEther(unstakeAmount);
+          const tx = await stakingContract.unstake(amount);
+          await tx.wait();
+          setUnstakeAmount("");
+          updateBalances(stakingContract, tokenContract, account);
+          setAlertMessage("Unstake successful!");
+          setShowAlert(true);
+        } catch (err) {
+          setError("Unstake failed");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+    useEffect(() => {
+      if (tokenContract && account && stakeAmount) {
+        const checkApproval = async () => {
+            try {
+            const allowance = await tokenContract.allowance(account, STAKING_CONTRACT_ADDRESS);
+            setIsApproved(allowance>=(ethers.parseEther(stakeAmount)));
+            } catch (err) {
+                setError("Error checking approval status");
+            }
+        };
+        checkApproval();
+      }
+    }, [tokenContract, account, stakeAmount])
+
+      // Claim rewards
+      const claimRewards = async () => {
+        try {
+          const tx = await stakingContract.claimReward();
+          await tx.wait();
+          updateBalances(stakingContract, tokenContract, account);
+          setAlertMessage("Your rewards have been successfully claimed!");
+          setShowAlert(true);
+        } catch (err) {
+          setError("Claim failed");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const closeAlert = () => {
+        setShowAlert(false);
+        setAlertMessage("");
+      };
+
+      // Periodically update balances
+      useEffect(() => {
+        if (stakingContract && tokenContract && account) {
+          const interval = setInterval(() => {
+            updateBalances(stakingContract, tokenContract, account);
+          }, 10000); // Update every 10 seconds
+          return () => clearInterval(interval);
+        }
+      }, [stakingContract, tokenContract, account]);
+
+    useEffect(() => {
+      const handleClick = () => {
+        if (error) {
+          setError(""); // Clear error on any click
+        }
+      };
+      document.addEventListener("click", handleClick);
+      return () => {
+        document.removeEventListener("click", handleClick);
+      };
+    }, [error])
+
+
+      return (
+        <div className="max-w-lg mx-auto p-8 bg-[#1f2329] rounded-xl transform transition-all duration-300 hover:shadow-[0_0_30px_rgba(59,130,246,0.7)]">
+            <img 
+                src="/assets/lizard.png"
+                alt="Dex Lizard"
+                className="w-24 h-24 mx-auto mb-6"
+            />
+            <h1 className="text-4xl md:text-5xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                Pool Stake 
+            </h1>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/50 border border-red-500 rounded-lg flex items-center justify-center">
+              <svg className="w-5 h-5 mr-2 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-red-400 text-sm">{error}</p>
+            </div>
+          )}          
+          
+          {!account ? (
+            <>
+            <div> <p className="text-gray-300 text-center mb-5 text-sm md:text-base">
+              Connect your wallet to start staking in our decentralized pool and earn rewards!</p> 
+            </div>
+
+            <button
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg flex items-center justify-center space-x-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={connectWallet}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"></path>
+                  </svg>
+                  <span>Connecting...</span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                  <span>Connect Wallet</span>
+                </>
+              )}
+            </button>
+          </>
+          ) : (
+            <div>
+              <p className="text-center mb-3 text-gray-400 mt-[-0.5rem]">
+                Connected Wallet Address: {account.slice(0, 6)}...{account.slice(-4)}
+              </p>
+              <div className="mb-3 text-gray-300">
+                <div style={{ display: 'flex', justifyContent:'space-between', gap: '5rem' }}>
+                  <p>Token Balance:</p>
+                  <p className="text-lg font-bold"> {parseFloat(tokenBalance).toFixed(2)} Tokens</p>
+                </div>
+                <div style={{ display: 'flex', justifyContent:'space-between', gap: '5rem' }}>
+                  <p>Staked Balance: </p>
+                  <p className="text-lg font-bold">{parseFloat(stakedBalance).toFixed(2)} Tokens</p>
+                </div>
+                <div style={{ display: 'flex', justifyContent:'space-between', gap: '5rem' }}>
+                  <p>Earned Rewards: </p>
+                  <p className="text-lg font-bold">{parseFloat(rewards).toFixed(2)} Tokens</p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '2rem' }}>
+                <div className="mb-6" style={{ width: '50%'}}>
+                  <h2 className="text-xl font-semibold mb-2 text-gray-300">Stake Tokens</h2>
+                  <input
+                    type="number"
+                    value={stakeAmount}
+                    onChange={(e) => {
+                      setStakeAmount(e.target.value)
+                      if (tokenContract && account) {
+                        tokenContract.allowance(account, STAKING_CONTRACT_ADDRESS).then(allowance => {
+                        setIsApproved(allowance >= (ethers.parseEther(e.target.value || "0")));
+                        });
+                      }
+                    }}
+                    placeholder="Amount to stake"
+                    className="w-full p-2 mb-2 bg-gray-700 rounded text-white"
+                  />
+                  <button
+                    className="w-full bg-[#514f50] hover:bg-[#9c999a] text-white font-semibold py-2 px-4 rounded mb-2"
+                    onClick={approveTokens}
+                    disabled={isLoading || !stakeAmount}
+                  >
+                    Approve Tokens
+                  </button>
+                  <button
+                    className="w-full bg-[#514f50] hover:bg-[#9c999a] text-white font-semibold py-2 px-4 rounded"
+                    onClick={stakeTokens}
+                    disabled={isLoading || !stakeAmount || !isApproved}
+                  >
+                    Stake
+                  </button>
+                </div>
+                <div className="mb-6" style={{ width: '50%'}}>
+                  <h2 className="text-xl font-semibold mb-2 text-gray-300">Unstake Tokens</h2>
+                  <input
+                    type="number"
+                    value={unstakeAmount}
+                    onChange={(e) => setUnstakeAmount(e.target.value)}
+                    placeholder="Amount to unstake"
+                    className="w-full p-2 mb-2 bg-gray-700 rounded text-white"
+                  />
+                  <button
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded"
+                    onClick={unstakeTokens}
+                  >
+                    Unstake
+                  </button>
+                </div>
+              </div>
+              <div>
+                <button
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-semibold py-2 px-4 rounded transition-all duration-300"
+                  onClick={claimRewards}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5 mr-2 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-8 8 8 8 0 01-8-8z"></path>
+                      </svg>
+                      Claiming...
+                    </>
+                  ) : (
+                    "Claim Rewards"
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+        {showAlert && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-[#1f2329] border border-[#1f2329] rounded-lg p-6 shadow-lg transform transition-all duration-300 ease-in-out scale-100 hover:scale-102 max-w-md w-full">
+              <div className="flex justify-center items-center">
+                <h3 className="text-xl font-bold text-gray-300">Success</h3>
+              </div>
+              <div className="flex justify-center items-center">
+                <p className="mt-4 text-gray-300">{alertMessage}</p>
+              </div>
+              <div className="mt-6">
+                <button
+                  onClick={closeAlert}
+                  className="w-full bg-gradient-to-r from-purple-600 to-purple-800 hover:from-purple-700 hover:to-purple-900 text-white font-semibold py-2 px-4 rounded transition-all duration-300"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+      root.render(<App />);
+  </script>
+</body>
+</html>
