@@ -1,13 +1,5 @@
-# Sample Hardhat Project
+# Stake Pool
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a Hardhat Ignition module that deploys that contract.
+This is a personal project that I made where users are given a set amount of test tokens that they can then stake and await rewards. The more that a user stakes, the higher the rewards. 
 
-Try running some of the following tasks:
-
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat ignition deploy ./ignition/modules/Lock.js
-```
+I topped off this solidity project with a simple frontend component to enhance user experience.
